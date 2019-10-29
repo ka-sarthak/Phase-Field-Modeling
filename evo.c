@@ -4,8 +4,6 @@
 #include<complex.h>
 #include<fftw3.h>
 
-//main 
-
 void main()
 {
 	fftw_init_threads();
@@ -14,7 +12,7 @@ void main()
 	double vol=0.2, c0b, c0c;
 	
 	
-	int t=0, nt, t_total=100000;
+	int t, nt, t_total=100000;
 	double Kbb, Kcc, Kbc, Ka=4.0, Kb=4.0, Kc=4.0;
 	double kx, ky, dx=1.0, dy=1.0, dt=0.1, ki=3.2;
 	double L1, L2, L3, L4, R1, R2, det;
@@ -40,16 +38,27 @@ void main()
 	E0=(double*)malloc(sizeof(double)*nx*ny);
 //inputing the initial condition
 	
-	fp=fopen("/home/kapster/elastic/onepptelas/191010/criticalrad/with/outB7900.txt", "r");
 	for(i=0; i<nx; i++)
 	for(j=0; j<ny; j++)
-		fscanf(fp, "%lf %lf %lf ", &dummy, &dummy, &C1[j+i*ny]);
-	fclose(fp);
+	{	if ((i-nx/2)*(i-nx/2) + (j-ny/2)*(j-ny/2)<81) //taking a circular precipitate of rad 9
+		{	
+			C1[j+i*ny]=betaB;
+			C2[j+i*ny]=betaC;	
+		}
 
-	fp=fopen("/home/kapster/elastic/onepptelas/191010/criticalrad/with/outC7900.txt", "r");
+		else
+		{	C1[j+i*ny]=alphaB+ss;
+			C2[j+i*ny]=alphaC;	
+		}
+	}
+
+	
+	fp=fopen("outB0.txt", "w");
 	for(i=0; i<nx; i++)
-	for(j=0; j<ny; j++)
-		fscanf(fp, "%lf %lf %lf ", &dummy, &dummy, &C2[j+i*ny]);
+	{	for(j=0; j<ny; j++)
+			fprintf(fp, "%d\t%d\t%lf\n", i, j, C1[j+i*ny]);
+			fprintf(fp, "\n");
+	}
 	fclose(fp);
 	
 //setting the effective Kappas value
@@ -58,8 +67,8 @@ void main()
 	Kbc=Ka;
 		
 //average composition at fixed volume fraction of beta=0.2 and alpha=0.8
-	c0b=vol*(betaB-(alphaB+ss))+(alphaB+ss);		//0.226926
-	c0c=vol*(betaC-alphaC)+alphaC;		//0.067315
+	c0b=vol*(betaB-(alphaB+ss))+(alphaB+ss);		
+	c0c=vol*(betaC-alphaC)+alphaC;		
 	
 	Mbb= Mb*pow(1-c0b,2) + (Ma+Mc)*pow(c0b,2);
 	Mcc= Mc*pow(1-c0c,2) + (Ma+Mb)*pow(c0c,2);
@@ -160,7 +169,7 @@ void main()
 	fftw_execute_dft(forward, g2, g2);
 	fftw_execute_dft(forward,beta,beta);
 	
-	//because beta1, beta2 are constant functions, no need to update them after every time step (applicable only for the current beta function, ie, (cb-cb0)gammaB+(cc-cc0)gammaC
+//because beta1, beta2 are constant functions, no need to update them after every time step (applicable only for the current beta function, ie, (cb-cb0)gammaB+(cc-cc0)gammaC
 	fftw_execute_dft(forward,beta1,beta1);
 	fftw_execute_dft(forward,beta2,beta2);
 				
@@ -174,11 +183,11 @@ void main()
 
 
 
-	for(t=79001; t<=t_total; t++)
+	for(t=1; t<=t_total; t++)
 	{	
 		if(t%1000==0)
 		printf("Last T reached=%d\n", t/10);
-	//solving the mech equi for entire space, finding all the strains 
+	
 		for(i=1; i<nx-1; i++)
 		{	
 			
@@ -192,7 +201,7 @@ void main()
 				if(j<ny/2)	ky=2.0*M_PI*j/(dy*ny);
 				else		ky=2.0*M_PI*(ny-j)/(dy*ny);
 				
-		//getting G tensor which is (Cijkl*gj*gk)^(-1)
+//getting G tensor which is inverse of (Cijkl*gj*gk)
 				
 				Ginv11= C11*kx*kx+C44*ky*ky;
 				Ginv12= (C12+C44)*kx*ky;
@@ -207,7 +216,7 @@ void main()
 				G[1][1]=  Ginv11/Ginvdet;
 				
 								
-		//solving for mechanical equilibrium to get displacement at given point
+//solving for mechanical equilibrium to get displacement at given point
 				
 				u1[k]=0+0.0*_Complex_I;
 				u2[k]=0+0.0*_Complex_I;
@@ -223,29 +232,16 @@ void main()
 				for(j1=0; j1<2; j1++)
 					u2[k]+=-_Complex_I*G[i1][1]*sigmaT[i1][j1]*kxy[j1]*beta[k];
 
-
-
-		//determination of periodic strain at given point
+//determination of periodic strain at given point
 				perstr11[k]=-_Complex_I*kx*u1[k];
 				perstr12[k]=-_Complex_I*ky*u1[k];
 				perstr21[k]=-_Complex_I*kx*u2[k];
 				perstr22[k]=-_Complex_I*ky*u2[k];
-
-		//determination of eigen strain at given point
-				
-			//	fftw_execute_dft(backward,beta,beta);
-				
-				//eigen strain
-				//for(i1=0; i1<2; i1++)
-				//for(j1=0; j1<2; j1++)
-				//e0[i1][j1]=misfit*(beta[k]/(double)(nx*ny))*ro[i1][j1];
-
-			//	fftw_execute_dft(forward,beta,beta);
-				
+	
 			}
 		}	
 	
-	//getting periodic strain field into real space
+//getting periodic strain field into real space
 		fftw_execute_dft(backward,perstr11,perstr11);
 		fftw_execute_dft(backward,perstr12,perstr12);
 		fftw_execute_dft(backward,perstr21,perstr21);
@@ -253,7 +249,7 @@ void main()
 		
 		fftw_execute_dft(backward,beta,beta);
 	
-	//calculating elastic energy landscape
+//calculating elastic energy landscape
 		for(i=0; i<nx; i++)
 		{	
 			
@@ -348,36 +344,10 @@ void main()
 			beta[k]=((c1[k]-alphaB)*gammaB+(c2[k]-alphaC)*gammaC);
 		}
 		
-		if(t%1000==0)
+//printing output files
+		if(t%1000==0) 
 		{
-		/* 	printf("E0=%f\n", E0);
-			printf("per1=%f\n", perstrreal[0][0]);
-			printf("per2=%f\n", perstrreal[0][1]);
-			printf("per3=%f\n", perstrreal[1][0]);
-			printf("per4=%f\n", perstrreal[1][1]);
-		*/		
-
-			sprintf(out, "G1%d.txt", t/10);		
-			fp=fopen(out, "w");
-		
-			for(i=0; i<nx; i++)
-			{	for(j=0; j<ny; j++)
-				fprintf(fp, "%f\t%f\t%lf\n", i*dx, j*dy, creal(g1[j+i*ny]));
-				fprintf(fp, "\n");
-			}
-			fclose(fp);
-
-			sprintf(out, "E%d.txt", t/10);		
-			fp=fopen(out, "w");
-		
-			for(i=0; i<nx; i++)
-			{	for(j=0; j<ny; j++)
-				fprintf(fp, "%f\t%f\t%lf\n", i*dx, j*dy, E0[j+i*ny]);
-				fprintf(fp, "\n");
-			}
-			fclose(fp);
-
-			//printing data file of b
+			//composition of B
 			sprintf(out, "outB%d.txt", t/10);		
 			fp=fopen(out, "w");
 		
@@ -388,6 +358,7 @@ void main()
 			}
 			fclose(fp);
 
+			//composition of C
 			sprintf(out, "outC%d.txt", t/10);		
 			fp=fopen(out, "w");
 		
@@ -398,6 +369,16 @@ void main()
 			}
 			fclose(fp);
 			
+			//elastic energy landscape
+			sprintf(out, "E%d.txt", t/10);		
+			fp=fopen(out, "w");
+		
+			for(i=0; i<nx; i++)
+			{	for(j=0; j<ny; j++)
+				fprintf(fp, "%f\t%f\t%lf\n", i*dx, j*dy, E0[j+i*ny]);
+				fprintf(fp, "\n");
+			}
+			fclose(fp);			
 		}
 		
 				
