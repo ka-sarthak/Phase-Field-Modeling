@@ -1,3 +1,5 @@
+//one round precipitate in centre of 512x512 system; elasticity included 
+
 #include<stdlib.h>
 #include<stdio.h>
 #include<math.h>
