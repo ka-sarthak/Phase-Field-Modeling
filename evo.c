@@ -4,6 +4,8 @@
 #include<complex.h>
 #include<fftw3.h>
 
+//main 
+
 void main()
 {
 	fftw_init_threads();
