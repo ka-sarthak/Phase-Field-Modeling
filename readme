@@ -1,0 +1,14 @@
+Ola budding computational material researchers out there! 
+
+This repo contains codes to simulate growth of a single precipitate using phase field modeling. 
+You can also take it as an example for solving partial differential equations by transforming them into Fourier space using FFTW package.  
+
+'WithoutElasticity' folder contains code to simulate the growth without considering coherency strains.
+'WithElasticity' folder contains code to simulate the growth while considering coherency strains between the matrix and precipitate phase.
+
+You can run the code in linux terminal using the following command: 
+gcc evo.c -lm -lfftw3 -lfftw3_threads -lpthread
+
+The code will generate .txt files containing composition matrix at the output time step. Use gnuplot to generate color plots of the same.
+
+Refer the wiki for more info.
