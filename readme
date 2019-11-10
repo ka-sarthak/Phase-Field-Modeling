@@ -1,6 +1,6 @@
 Ola budding computational material researchers out there! 
 
-This repo contains codes to simulate growth of a single precipitate using phase field modeling. 
+This repo contains codes to simulate growth of a single precipitate in a ternary system using phase field modeling. 
 You can also take it as an example for solving partial differential equations by transforming them into Fourier space using FFTW package.  
 
 'WithoutElasticity' folder contains code to simulate the growth without considering coherency strains.
