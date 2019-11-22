@@ -1,3 +1,5 @@
+############### Refer the wiki for more info #################
+
 This repo contains codes to simulate growth of a single precipitate in a ternary system using phase field modeling. 
 You can also take it as an example for solving partial differential equations by transforming them into Fourier space using FFTW package.  
 
@@ -8,5 +10,3 @@ gcc evo.c -lm -lfftw3 -lfftw3_threads -lpthread
 ./a.out
 
 The code will generate .txt files containing composition matrix at the output time step. Use gnuplot to generate color plots of the same.
-
-Refer the wiki for more info.
